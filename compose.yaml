@@ -1,16 +1,26 @@
+
 version: 0.2
 
 phases:
-  pre_build:
+  install:
     commands:
-      - echo "Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      # Instala Docker
+      - echo "Instalando Docker..."
+      - curl -fsSL https://get.docker.com -o get-docker.sh
+      - sh get-docker.sh
+      - service docker start
+      - docker --version
+
   build:
     commands:
-      - echo "Building Docker image..."
+      # Autentica Docker con Amazon ECR
+      - echo "Autenticando Docker con ECR..."
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+
+      # Construye la imagen Docker
+      - echo "Construyendo la imagen Docker..."
       - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
-      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
-  post_build:
-    commands:
-      - echo "Pushing Docker image to ECR..."
+
+      # Sube la imagen a ECR
+      - echo "Subiendo la imagen a ECR..."
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
