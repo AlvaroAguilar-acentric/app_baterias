@@ -3,22 +3,19 @@ version: 0.2
 phases:
   install:
     commands:
-      # Instala Docker en Amazon Linux
-      - echo "Instalando Docker en Amazon Linux..."
-      - amazon-linux-extras install docker -y
+      - echo "Actualizando repositorios..."
+      - yum update -y
+      - echo "Instalando Docker..."
+      - yum install -y docker
+      - echo "Iniciando el servicio Docker..."
       - service docker start
       - docker --version
 
   build:
     commands:
-      # Autentica Docker con Amazon ECR
       - echo "Autenticando Docker con ECR..."
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
-
-      # Construye la imagen Docker
       - echo "Construyendo la imagen Docker..."
       - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
-
-      # Sube la imagen a ECR
       - echo "Subiendo la imagen a ECR..."
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
